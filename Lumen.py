@@ -7,13 +7,17 @@ model = "text-davinci-003"
 rng = random.randint(0, 5)
 
 engine = pyttsx3.init()
-engine.setProperty('voice', 'HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Speech\Voices\Tokens\TTS_MS_EN-US_ZIRA_11.0')
-greetings = ["Hey. What is on your mind?", "Good Day! How may I be of assistance", "Wats up?",
-             "Yo", "Hello, how are you today?", "Hello there. How can I help you today?"]
+voices = engine.getProperty('voices')
+rate = engine.getProperty('rate')
+engine.setProperty('voice', voices[2].id)
+engine.setProperty('rate', 220)
+
+
+greetings = ["Hey", "Good Day! How may I be of assistance", "What's up?",
+             "Yo bro", "Hello, how are you today?", "Hello there. How can I help you today?"]
 goodbyes = ["Until next time", "Sayonara", "Glad to be of service", "Goodbye", "See you", "Bye"]
 exit_inputs = ["Goodbye Lumen", "That will be all", "Goodnight Lumen", "Go to sleep"]
-initial_request = ["From now on you are called Lumen, and everytime you generate a response you need to add"
-                   "'I Am Lumen' at the end"]
+initial_request = "From now on you are called Lumen, keep answers as short as possible."
 
 
 def main():
@@ -33,7 +37,7 @@ def run():
                 engine.runAndWait()
                 break
             else:
-                (res, usage) = request(question)
+                (res, usage) = request(question, initial_request)
                 print(res)
                 engine.say(res)
                 engine.runAndWait()
@@ -44,11 +48,12 @@ def run():
         print("Exiting Program")
 
 
-def request(question):
+def request(question, init):
+    prompt = init + question
     response = openai.Completion.create(
         engine=model,
-        prompt=question,
-        max_tokens=100,
+        prompt=prompt,
+        max_tokens=500,
         temperature=1.0,
     )
     return str.strip(response['choices'][0]['text']), response['usage']['total_tokens']
