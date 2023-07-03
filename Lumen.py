@@ -20,27 +20,19 @@ mic = sr.Microphone(device_index=1)
 greetings = ["Hey", "Good Day! How may I be of assistance", "What's up?",
              "Yo bro", "Hello, how are you today?", "Hello there. How can I help you today?"]
 goodbyes = ["Until next time", "Sayonara", "Glad to be of service", "Goodbye", "See you", "Bye"]
-lumen_waiting = ["Dumbai dumbai dum", "br br", "Any questions?", "F.F f", "Zzz", "hyia hehehe"]
 wait_counter = 0
 
-# Sometimes saying "Lumen" is understood by the program as "woman" or "little man".
-exit_inputs = ["goodbye lumen", "goodbye woman", "goodbye little man", "that will be all", "good night lumen",
-               "good night woman", "good night little man", "go to sleep"]
+exit_inputs = ["goodbye", "that will be all", "good night", "go to sleep"]
 initial_request = "From now on you are called Lumen, keep answers as short as possible."
 
 
 def main():
-    global wait_counter
     openai.api_key = input("API Key: ")
     lumen_speak(get_greeting())
-    while True:
-        if wait_counter > 1:
-            lumen_speak("Ahhh, I'm bored, goodnight")
-            break
 
+    while True:
         question = get_question()
         if question is None:
-            wait_counter += 1
             continue
         if question in exit_inputs:
             lumen_speak(get_goodbye())
@@ -57,7 +49,6 @@ def main():
             response, tokens_used = request(prompt)
             lumen_speak(response)
             print("Tokens used: " + str(tokens_used))
-            wait_counter = 0
 
 
 def request(question):
@@ -72,20 +63,22 @@ def request(question):
 
 def get_question():
     with mic as source:
-        speech.adjust_for_ambient_noise(source, duration=0.6)
+        speech.adjust_for_ambient_noise(source, duration=0.5)
         print("listening")
         try:
             audio = speech.listen(source, timeout=5)
         except sr.WaitTimeoutError:
-            print("speak")
+            print("Speak")
             return None
-        print("done listening")
+        print("Done Listening")
 
     try:
         question = speech.recognize_google(audio)
-        return question.lower()
+        if "lumen" in question.lower():
+            return question.lower().replace("lumen", "").strip()
+        else:
+            return None
     except sr.UnknownValueError:
-        lumen_speak(get_waiting())
         return None
     except sr.RequestError as e:
         print("Error: {0}".format(e))
@@ -103,10 +96,6 @@ def get_greeting():
 
 def get_goodbye():
     return random.choice(goodbyes)
-
-
-def get_waiting():
-    return random.choice(lumen_waiting)
 
 
 def timer_callback():
