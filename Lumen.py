@@ -1,6 +1,7 @@
 import openai
 import random
 import pyttsx3
+import pygame
 import threading
 import speech_recognition as sr
 
@@ -44,6 +45,10 @@ def main():
             lumen_speak(f"Setting timer for {minutes} minutes")
             timer = threading.Timer(minutes*60, timer_callback)
             timer.start()
+        elif "favorite" in question and "song" in question:
+            lumen_speak("Playing Don't ever forget")
+            file_path = "songs/dont_ever_forget.mp3"
+            play_song(file_path)
         else:
             prompt = initial_request + " " + question
             response, tokens_used = request(prompt)
@@ -100,6 +105,12 @@ def get_goodbye():
 
 def timer_callback():
     lumen_speak("Ding Ding Ding Ding")
+
+
+def play_song(file_path):
+    pygame.mixer.init()
+    pygame.mixer.music.load(file_path)
+    pygame.mixer.music.play()
 
 
 if __name__ == "__main__":
