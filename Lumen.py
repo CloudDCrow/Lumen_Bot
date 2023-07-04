@@ -18,6 +18,8 @@ engine.setProperty('rate', 190)
 speech = sr.Recognizer()
 mic = sr.Microphone(device_index=1)
 
+pygame.mixer.init()
+
 greetings = ["Hey", "Good Day! How may I be of assistance", "What's up?",
              "Yo bro", "Hello, how are you today?", "Hello there. How can I help you today?"]
 goodbyes = ["Until next time", "Sayonara", "Glad to be of service", "Goodbye", "See you", "Bye"]
@@ -43,16 +45,22 @@ def main():
             minutes_index = question.index("minutes")
             minutes = int(question[question.rfind(" ", 0, minutes_index-1) + 1:minutes_index])
             lumen_speak(f"Setting timer for {minutes} minutes")
+            print("Timer set")
             timer = threading.Timer(minutes*60, timer_callback)
             timer.start()
         elif "favorite" in question and "song" in question:
             lumen_speak("Playing Don't ever forget")
             file_path = "songs/dont_ever_forget.mp3"
             play_song(file_path)
+            print("Playing song")
         else:
             prompt = initial_request + " " + question
-            response, tokens_used = request(prompt)
-            lumen_speak(response)
+            try:
+                response, tokens_used = request(prompt)
+                lumen_speak(response)
+            except openai.error.AuthenticationError:
+                lumen_speak("No API key")
+                continue
             print("Tokens used: " + str(tokens_used))
 
 
@@ -71,10 +79,14 @@ def get_question():
         speech.adjust_for_ambient_noise(source, duration=0.5)
         print("listening")
         try:
-            audio = speech.listen(source, timeout=5)
+            audio = speech.listen(source, timeout=8, phrase_time_limit=8)
         except sr.WaitTimeoutError:
-            print("Speak")
-            return None
+            print("Timeout occurred while listening.")
+        except sr.UnknownValueError:
+            print("Unable to recognize speech.")
+        except sr.RequestError as e:
+            print(f"Error: {str(e)}")
+
         print("Done Listening")
 
     try:
@@ -91,8 +103,10 @@ def get_question():
 
 
 def lumen_speak(text):
+    engine.startLoop(False)
     engine.say(text)
-    engine.runAndWait()
+    engine.iterate()
+    engine.endLoop()
 
 
 def get_greeting():
@@ -108,7 +122,6 @@ def timer_callback():
 
 
 def play_song(file_path):
-    pygame.mixer.init()
     pygame.mixer.music.load(file_path)
     pygame.mixer.music.play()
 
