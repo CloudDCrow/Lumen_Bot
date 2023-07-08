@@ -5,32 +5,40 @@ import pygame
 import threading
 import speech_recognition as sr
 
+# OpenAPI key is needed to ask Lumen question.
+# Not needed for requests.
 openai.api_key = ""
 model = "text-davinci-002"
-rng = random.randint(0, 5)
 
+# Text-to-speech
 engine = pyttsx3.init()
 voices = engine.getProperty('voices')
 rate = engine.getProperty('rate')
 engine.setProperty('voice', voices[2].id)
-engine.setProperty('rate', 190)
+engine.setProperty('rate', 210)
 
+# Speech-recognizer
 speech = sr.Recognizer()
 mic = sr.Microphone(device_index=1)
 
+# Music-player
 pygame.mixer.init()
+
+# Random number, used to get a random greeting/goodbye from Lumen.
+rng = random.randint(0, 5)
 
 greetings = ["Hey", "Good Day! How may I be of assistance", "What's up?",
              "Yo bro", "Hello, how are you today?", "Hello there. How can I help you today?"]
 goodbyes = ["Until next time", "Sayonara", "Glad to be of service", "Goodbye", "See you", "Bye"]
-wait_counter = 0
 
+# Saying "Lumen" and one of the exit_inputs shuts down the program.
 exit_inputs = ["goodbye", "that will be all", "good night", "go to sleep"]
+
+# Prompt for AI
 initial_request = "From now on you are called Lumen, keep answers as short as possible."
 
 
 def main():
-    openai.api_key = input("API Key: ")
     lumen_speak(get_greeting())
 
     while True:
@@ -42,13 +50,26 @@ def main():
             print("Exiting program now")
             break
         elif "set" in question and "timer" in question:
-            minutes_index = question.index("minutes")
-            minutes = int(question[question.rfind(" ", 0, minutes_index-1) + 1:minutes_index])
-            lumen_speak(f"Setting timer for {minutes} minutes")
-            print("Timer set")
-            timer = threading.Timer(minutes*60, timer_callback)
-            timer.start()
-        elif "favorite" in question and "song" in question:
+            if "minutes" in question:
+                minutes_index = question.index("minutes")
+                minutes = int(question[question.rfind(" ", 0, minutes_index-1) + 1:minutes_index])
+                lumen_speak(f"Setting timer for {minutes} minutes")
+                print("Timer set")
+                timer = threading.Timer(minutes*60, timer_callback)
+                timer.start()
+            if "minute" in question:
+                lumen_speak("Setting timer for one minute")
+                print("Timer set")
+                timer = threading.Timer(60, timer_callback)
+                timer.start()
+            if "seconds" in question:
+                seconds_index = question.index("seconds")
+                seconds = int(question[question.rfind(" ", 0, seconds_index-1) + 1:seconds_index])
+                lumen_speak(f"Setting timer for {seconds} seconds")
+                print("Timer set")
+                timer = threading.Timer(seconds, timer_callback)
+                timer.start()
+        elif "play" in question and "don't ever forget" in question:
             lumen_speak("Playing Don't ever forget")
             file_path = "songs/dont_ever_forget.mp3"
             play_song(file_path)
@@ -75,9 +96,10 @@ def request(question):
 
 
 def get_question():
+    audio = None
     with mic as source:
         speech.adjust_for_ambient_noise(source, duration=0.5)
-        print("listening")
+        print("Listening")
         try:
             audio = speech.listen(source, timeout=8, phrase_time_limit=8)
         except sr.WaitTimeoutError:
@@ -89,10 +111,17 @@ def get_question():
 
         print("Done Listening")
 
+    if audio is None:
+        return None
+
     try:
         question = speech.recognize_google(audio)
+        print(question)
         if "lumen" in question.lower():
             return question.lower().replace("lumen", "").strip()
+        if "stop the song" in question.lower():
+            pygame.mixer.music.stop()
+            return None
         else:
             return None
     except sr.UnknownValueError:
@@ -118,7 +147,7 @@ def get_goodbye():
 
 
 def timer_callback():
-    lumen_speak("Ding Ding Ding Ding")
+    lumen_speak("Ding Ding Ding Ding, Ding Ding Ding Ding, Timer is done!")
 
 
 def play_song(file_path):
