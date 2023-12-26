@@ -5,6 +5,8 @@ import pygame
 import threading
 import speech_recognition as sr
 
+from actions.music_player import play_playlist
+
 # OpenAPI key is needed to ask Lumen question.
 # Not needed for requests.
 openai.api_key = ""
@@ -57,22 +59,22 @@ def main():
                 print("Timer set")
                 timer = threading.Timer(minutes*60, timer_callback)
                 timer.start()
-            if "minute" in question:
+            elif "minute" in question:
                 lumen_speak("Setting timer for one minute")
                 print("Timer set")
                 timer = threading.Timer(60, timer_callback)
                 timer.start()
-            if "seconds" in question:
+            elif "seconds" in question:
                 seconds_index = question.index("seconds")
                 seconds = int(question[question.rfind(" ", 0, seconds_index-1) + 1:seconds_index])
                 lumen_speak(f"Setting timer for {seconds} seconds")
                 print("Timer set")
                 timer = threading.Timer(seconds, timer_callback)
                 timer.start()
-        elif "play" in question and "don't ever forget" in question:
-            lumen_speak("Playing Don't ever forget")
-            file_path = "songs/dont_ever_forget.mp3"
-            play_song(file_path)
+        elif "play" in question and "random" in question:
+            lumen_speak("Playing a random song")
+            folder_path = "songs/"
+            play_playlist(folder_path)
             print("Playing song")
         else:
             prompt = initial_request + " " + question
