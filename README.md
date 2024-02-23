@@ -29,3 +29,5 @@ Upon starting the program, the robot follows a sequence of actions:
 
    - Example: "What is 20x20, Lumen?"
    - In this case, as it's not a custom command, the program consults OpenAI for the answer.
+
+(For Lumen Bot for Raspberry Pi click here: https://github.com/CloudDCrow/lumen4raspberry)
