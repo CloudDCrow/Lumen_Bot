@@ -29,12 +29,17 @@ pygame.mixer.init()
 # Random number, used to get a random greeting/goodbye from Lumen.
 rng = random.randint(0, 5)
 
+# Words that are needed in a sentence for Lumen to respond
+# Sometimes it hears "woman" or something else instead of "Lumen"
+recognition_keywords = ["lumen", "woman", "human", "little man",
+                        "two men", "blue and"]
+
 greetings = ["Hey", "Good Day! How may I be of assistance", "What's up?",
              "Yo bro", "Hello, how are you today?", "Hello there. How can I help you today?"]
 goodbyes = ["Until next time", "Sayonara", "Glad to be of service", "Goodbye", "See you", "Bye"]
 
 # Saying "Lumen" and one of the exit_inputs shuts down the program.
-exit_inputs = ["goodbye", "that will be all", "good night", "go to sleep"]
+exit_inputs = ["goodbye", "that will be all", "good night", "shutdown"]
 
 # Prompt for AI
 initial_request = "From now on you are called Lumen, keep answers as short as possible."
@@ -119,9 +124,10 @@ def get_question():
     try:
         question = speech.recognize_google(audio)
         print(question)
-        if "lumen" in question.lower():
-            return question.lower().replace("lumen", "").strip()
-        if "stop the song" in question.lower():
+        for keyword in recognition_keywords:
+            if keyword in question.lower():
+                return question.lower().replace(keyword, "").strip()
+        if "stop please" in question.lower():
             pygame.mixer.music.stop()
             return None
         else:
