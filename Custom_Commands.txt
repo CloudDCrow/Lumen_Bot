@@ -1,7 +1,14 @@
-1. Setting a timer:
+1. Set a timer:
     "Lumen, set timer for x minutes"
     "Lumen, set timer for x seconds"
 
 
-2. Playing a song:
-    "Lumen play random"
+2. Play song:
+    "Lumen play a random song"
+    "Lumen play a playlist"
+
+    2.1. Stop song:
+        "Lumen stop please"
+        "Lumen stop playlist"
+
+3. Add Reminder:

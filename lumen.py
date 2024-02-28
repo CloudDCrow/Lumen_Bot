@@ -1,11 +1,9 @@
 import openai
-import random
 import pyttsx3
-import pygame
 import threading
 import speech_recognition as sr
 
-from actions.music_player import play_playlist
+from actions.music_player import *
 
 # OpenAPI key is needed to ask Lumen question.
 # Not needed for requests.
@@ -24,7 +22,7 @@ speech = sr.Recognizer()
 mic = sr.Microphone(device_index=1)
 
 # Music-player
-pygame.mixer.init()
+pygame.init()
 
 # Random number, used to get a random greeting/goodbye from Lumen.
 rng = random.randint(0, 5)
@@ -32,8 +30,10 @@ rng = random.randint(0, 5)
 # Words that are needed in a sentence for Lumen to respond
 # Sometimes it hears "woman" or something else instead of "Lumen"
 recognition_keywords = ["lumen", "woman", "human", "little man",
-                        "two men", "blue and"]
+                        "two men", "blue and", "blue man", "newman",
+                        "aluminum"]
 
+# Lumen's greetings and goodbyes
 greetings = ["Hey", "Good Day! How may I be of assistance", "What's up?",
              "Yo bro", "Hello, how are you today?", "Hello there. How can I help you today?"]
 goodbyes = ["Until next time", "Sayonara", "Glad to be of service", "Goodbye", "See you", "Bye"]
@@ -47,9 +47,15 @@ initial_request = "From now on you are called Lumen, keep answers as short as po
 
 def main():
     lumen_speak(get_greeting())
+    playlist_on = False
 
     while True:
+        if playlist_on and not check_if_playing():
+            play_random_song("songs/")
+
         question = get_question()
+
+        # Checks input question
         if question is None:
             continue
         if question in exit_inputs:
@@ -79,8 +85,17 @@ def main():
         elif "play" in question and "random" in question:
             lumen_speak("Playing a random song")
             folder_path = "songs/"
-            play_playlist(folder_path)
+            play_random_song(folder_path)
             print("Playing song")
+        elif "stop" in question and "playlist" in question:
+            lumen_speak("Stopping a playlist")
+            playlist_on = not playlist_on
+            print("Playlist off")
+            stop_song()
+        elif "playlist" in question:
+            lumen_speak("Playing a playlist")
+            playlist_on = not playlist_on
+            print("Playlist on")
         else:
             prompt = initial_request + " " + question
             try:
@@ -90,16 +105,6 @@ def main():
                 lumen_speak("No API key")
                 continue
             print("Tokens used: " + str(tokens_used))
-
-
-def request(question):
-    response = openai.Completion.create(
-        engine=model,
-        prompt=question,
-        max_tokens=100,
-        temperature=1.0,
-    )
-    return str.strip(response['choices'][0]['text']), response['usage']['total_tokens']
 
 
 def get_question():
@@ -128,7 +133,7 @@ def get_question():
             if keyword in question.lower():
                 return question.lower().replace(keyword, "").strip()
         if "stop please" in question.lower():
-            pygame.mixer.music.stop()
+            stop_song()
             return None
         else:
             return None
@@ -146,6 +151,16 @@ def lumen_speak(text):
     engine.endLoop()
 
 
+def request(question):
+    response = openai.Completion.create(
+        engine=model,
+        prompt=question,
+        max_tokens=100,
+        temperature=1.0,
+    )
+    return str.strip(response['choices'][0]['text']), response['usage']['total_tokens']
+
+
 def get_greeting():
     return random.choice(greetings)
 
@@ -156,11 +171,6 @@ def get_goodbye():
 
 def timer_callback():
     lumen_speak("Ding Ding Ding Ding, Ding Ding Ding Ding, Timer is done!")
-
-
-def play_song(file_path):
-    pygame.mixer.music.load(file_path)
-    pygame.mixer.music.play()
 
 
 if __name__ == "__main__":
