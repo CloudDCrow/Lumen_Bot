@@ -4,6 +4,7 @@ import threading
 import speech_recognition as sr
 
 from actions.music_player import *
+from actions.reminders import *
 
 # OpenAPI key is needed to ask Lumen question.
 # Not needed for requests.
@@ -31,7 +32,7 @@ rng = random.randint(0, 5)
 # Sometimes it hears "woman" or something else instead of "Lumen"
 recognition_keywords = ["lumen", "woman", "human", "little man",
                         "two men", "blue and", "blue man", "newman",
-                        "aluminum"]
+                        "aluminum", "roman"]
 
 # Lumen's greetings and goodbyes
 greetings = ["Hey", "Good Day! How may I be of assistance", "What's up?",
@@ -96,6 +97,24 @@ def main():
             lumen_speak("Playing a playlist")
             playlist_on = not playlist_on
             print("Playlist on")
+        elif "add reminder" in question:
+            new_reminder = question[12:]
+            reminders_list = load_reminders()
+            add_reminder(reminders_list, new_reminder)
+            lumen_speak(new_reminder + ", added to reminders")
+        elif "remove reminder" in question:
+            reminders_list = load_reminders()
+            remove_reminder(reminders_list, 0)
+            lumen_speak("Reminder removed")
+        elif "clear" in question and "reminders" in question:
+            reminders_list = load_reminders()
+            clear_reminders(reminders_list)
+            lumen_speak("Reminders cleared")
+        elif "reminders" in question:
+            reminders_list = load_reminders()
+            if len(reminders_list) == 0:
+                lumen_speak("No reminders")
+            lumen_speak(reminders_list)
         else:
             prompt = initial_request + " " + question
             try:
