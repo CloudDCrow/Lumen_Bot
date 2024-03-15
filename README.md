@@ -1,6 +1,6 @@
 # Lumen Bot
 
-A robot using OpenAI for communication.
+A command bot using OpenAI for communication.
 
 ## How it Works
 
