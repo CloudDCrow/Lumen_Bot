@@ -1,4 +1,4 @@
-# Lumen_Bot
+# Lumen Bot
 
 A robot using OpenAI for communication.
 
